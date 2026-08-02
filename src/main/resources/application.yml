@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: notifications-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/notifications_db
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notifications-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+        spring.json.type.mapping: orderCreatedEvent:com.portfolio.notifications.event.OrderCreatedEvent
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.portfolio.notifications: INFO
+    org.springframework.kafka: WARN

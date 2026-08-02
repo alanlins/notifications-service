@@ -1,0 +1,11 @@
+com\portfolio\notifications\config\KafkaConsumerConfig.class
+com\portfolio\notifications\NotificationsServiceApplication.class
+com\portfolio\notifications\listener\OrderEventListener.class
+com\portfolio\notifications\service\NotificationService.class
+com\portfolio\notifications\repository\NotificationRepository.class
+com\portfolio\notifications\model\Notification.class
+com\portfolio\notifications\event\OrderCreatedEvent$OrderCreatedEventBuilder.class
+com\portfolio\notifications\event\OrderCreatedEvent.class
+com\portfolio\notifications\config\WebSocketConfig.class
+com\portfolio\notifications\model\Notification$NotificationBuilder.class
+com\portfolio\notifications\controller\NotificationController.class

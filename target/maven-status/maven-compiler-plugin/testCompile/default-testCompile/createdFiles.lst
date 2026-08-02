@@ -1,0 +1,2 @@
+com\portfolio\notifications\service\NotificationServiceTest.class
+com\portfolio\notifications\listener\OrderEventListenerTest.class
