@@ -1,407 +1,448 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Order-Events Demo</title>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
 
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 30px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .message {
+        padding: 12px;
+        border-radius: 6px;
+        margin-top: 20px;
+        display: none;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+
+      .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .notifications-list {
+        list-style: none;
+      }
+
+      .notification-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        margin-bottom: 12px;
+        border-radius: 4px;
+        animation: highlightNotification 0.5s ease-out;
+        font-size: 14px;
+      }
+
+      @keyframes highlightNotification {
+        0% {
+          background: #e7f0ff;
+          transform: translateX(-10px);
+        }
+        100% {
+          background: #f8f9fa;
+          transform: translateX(0);
+        }
+      }
+
+      .notification-time {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+      }
+
+      .empty-state {
+        color: #999;
+        text-align: center;
+        padding: 40px 20px;
+        font-size: 14px;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 10px;
+      }
+
+      .status.connected {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      @media (max-width: 768px) {
         .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
+          grid-template-columns: 1fr;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+          font-size: 24px;
         }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .message {
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 20px;
-            display: none;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .notifications-list {
-            list-style: none;
-        }
-
-        .notification-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            margin-bottom: 12px;
-            border-radius: 4px;
-            animation: highlightNotification 0.5s ease-out;
-            font-size: 14px;
-        }
-
-        @keyframes highlightNotification {
-            0% {
-                background: #e7f0ff;
-                transform: translateX(-10px);
-            }
-            100% {
-                background: #f8f9fa;
-                transform: translateX(0);
-            }
-        }
-
-        .notification-time {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
-        }
-
-        .empty-state {
-            color: #999;
-            text-align: center;
-            padding: 40px 20px;
-            font-size: 14px;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <!-- Order Form Card -->
-        <div class="card">
-            <h1>Submit Order</h1>
-            <p class="subtitle">Create a new order (published to Kafka)</p>
+      <!-- Order Form Card -->
+      <div class="card">
+        <h1>Submit Order</h1>
+        <p class="subtitle">Create a new order (published to Kafka)</p>
 
-            <form id="orderForm">
-                <div class="form-group">
-                    <label for="customerName">Customer Name</label>
-                    <input type="text" id="customerName" name="customerName" required placeholder="John Doe">
-                </div>
+        <form id="orderForm">
+          <div class="form-group">
+            <label for="customerName">Customer Name</label>
+            <input
+              type="text"
+              id="customerName"
+              name="customerName"
+              required
+              placeholder="John Doe"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label for="item">Item</label>
-                    <input type="text" id="item" name="item" required placeholder="Widget Pro">
-                </div>
+          <div class="form-group">
+            <label for="item">Item</label>
+            <input
+              type="text"
+              id="item"
+              name="item"
+              required
+              placeholder="Widget Pro"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label for="quantity">Quantity</label>
-                    <input type="number" id="quantity" name="quantity" min="1" required value="1">
-                </div>
+          <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              min="1"
+              required
+              value="1"
+            />
+          </div>
 
-                <button type="submit">Submit Order</button>
+          <button type="submit">Submit Order</button>
 
-                <div id="formMessage" class="message"></div>
-            </form>
+          <div id="formMessage" class="message"></div>
+        </form>
+      </div>
+
+      <!-- Notifications Card -->
+      <div class="card">
+        <h1>Live Notifications</h1>
+        <p class="subtitle">Real-time updates via WebSocket</p>
+
+        <div>
+          <span id="wsStatus" class="status disconnected">Disconnected</span>
         </div>
 
-        <!-- Notifications Card -->
-        <div class="card">
-            <h1>Live Notifications</h1>
-            <p class="subtitle">Real-time updates via WebSocket</p>
-
-            <div>
-                <span id="wsStatus" class="status disconnected">Disconnected</span>
-            </div>
-
-            <ul id="notificationsList" class="notifications-list" style="margin-top: 20px;">
-                <li class="empty-state">Loading notifications...</li>
-            </ul>
-        </div>
+        <ul
+          id="notificationsList"
+          class="notifications-list"
+          style="margin-top: 20px"
+        >
+          <li class="empty-state">Loading notifications...</li>
+        </ul>
+      </div>
     </div>
 
     <script>
-        // Configuration
-        const ORDERS_SERVICE_URL = 'http://localhost:8081';
-        // SockJS takes a plain http(s) URL and negotiates the best transport
-        // (native WebSocket when available) internally — a ws:// URL throws.
-        const NOTIFICATIONS_WS_URL = 'http://localhost:8082/ws';
+      // Configuration
+      const ORDERS_SERVICE_URL = "https://orders-service-dlxt.onrender.com";
+      // SockJS takes a plain http(s) URL and negotiates the best transport
+      // (native WebSocket when available) internally — a ws:// URL throws.
+      const NOTIFICATIONS_WS_URL =
+        "https://notifications-service-a1z6.onrender.com/ws";
 
-        let stompClient = null;
+      let stompClient = null;
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadNotifications();
-            connectWebSocket();
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        loadNotifications();
+        connectWebSocket();
 
-            document.getElementById('orderForm').addEventListener('submit', handleOrderSubmit);
-        });
+        document
+          .getElementById("orderForm")
+          .addEventListener("submit", handleOrderSubmit);
+      });
 
-        // Load existing notifications
-        function loadNotifications() {
-            fetch('/api/notifications')
-                .then(response => response.json())
-                .then(notifications => {
-                    const listContainer = document.getElementById('notificationsList');
-                    listContainer.innerHTML = '';
+      // Load existing notifications
+      function loadNotifications() {
+        fetch("/api/notifications")
+          .then((response) => response.json())
+          .then((notifications) => {
+            const listContainer = document.getElementById("notificationsList");
+            listContainer.innerHTML = "";
 
-                    if (notifications.length === 0) {
-                        listContainer.innerHTML = '<li class="empty-state">No notifications yet. Submit an order to get started!</li>';
-                    } else {
-                        notifications.forEach(notification => {
-                            appendNotification(notification);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Failed to load notifications:', error);
-                    document.getElementById('notificationsList').innerHTML = '<li class="empty-state">Failed to load notifications</li>';
-                });
-        }
-
-        // Connect to WebSocket
-        function connectWebSocket() {
-            const socket = new SockJS(NOTIFICATIONS_WS_URL);
-            stompClient = Stomp.over(socket);
-
-            stompClient.connect({}, function(frame) {
-                console.log('Connected: ' + frame.command);
-                updateWebSocketStatus(true);
-
-                stompClient.subscribe('/topic/notifications', function(message) {
-                    const notification = JSON.parse(message.body);
-                    appendNotification(notification);
-                });
-            }, function(error) {
-                console.error('WebSocket connection error:', error);
-                updateWebSocketStatus(false);
-                // Try reconnecting after 3 seconds
-                setTimeout(connectWebSocket, 3000);
-            });
-        }
-
-        // Update WebSocket status indicator
-        function updateWebSocketStatus(connected) {
-            const statusElement = document.getElementById('wsStatus');
-            if (connected) {
-                statusElement.textContent = 'Connected';
-                statusElement.className = 'status connected';
+            if (notifications.length === 0) {
+              listContainer.innerHTML =
+                '<li class="empty-state">No notifications yet. Submit an order to get started!</li>';
             } else {
-                statusElement.textContent = 'Disconnected';
-                statusElement.className = 'status disconnected';
+              notifications.forEach((notification) => {
+                appendNotification(notification);
+              });
             }
+          })
+          .catch((error) => {
+            console.error("Failed to load notifications:", error);
+            document.getElementById("notificationsList").innerHTML =
+              '<li class="empty-state">Failed to load notifications</li>';
+          });
+      }
+
+      // Connect to WebSocket
+      function connectWebSocket() {
+        const socket = new SockJS(NOTIFICATIONS_WS_URL);
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect(
+          {},
+          function (frame) {
+            console.log("Connected: " + frame.command);
+            updateWebSocketStatus(true);
+
+            stompClient.subscribe("/topic/notifications", function (message) {
+              const notification = JSON.parse(message.body);
+              appendNotification(notification);
+            });
+          },
+          function (error) {
+            console.error("WebSocket connection error:", error);
+            updateWebSocketStatus(false);
+            // Try reconnecting after 3 seconds
+            setTimeout(connectWebSocket, 3000);
+          },
+        );
+      }
+
+      // Update WebSocket status indicator
+      function updateWebSocketStatus(connected) {
+        const statusElement = document.getElementById("wsStatus");
+        if (connected) {
+          statusElement.textContent = "Connected";
+          statusElement.className = "status connected";
+        } else {
+          statusElement.textContent = "Disconnected";
+          statusElement.className = "status disconnected";
+        }
+      }
+
+      // Append notification to the list
+      function appendNotification(notification) {
+        const listContainer = document.getElementById("notificationsList");
+
+        // Clear empty state if it exists
+        const emptyState = listContainer.querySelector(".empty-state");
+        if (emptyState) {
+          emptyState.remove();
         }
 
-        // Append notification to the list
-        function appendNotification(notification) {
-            const listContainer = document.getElementById('notificationsList');
+        const item = document.createElement("li");
+        item.className = "notification-item";
+        const timestamp = new Date(notification.createdAt).toLocaleTimeString();
 
-            // Clear empty state if it exists
-            const emptyState = listContainer.querySelector('.empty-state');
-            if (emptyState) {
-                emptyState.remove();
-            }
+        const strong = document.createElement("strong");
+        strong.textContent = notification.message;
 
-            const item = document.createElement('li');
-            item.className = 'notification-item';
-            const timestamp = new Date(notification.createdAt).toLocaleTimeString();
+        const time = document.createElement("div");
+        time.className = "notification-time";
+        time.textContent = timestamp;
 
-            const strong = document.createElement('strong');
-            strong.textContent = notification.message;
+        item.appendChild(strong);
+        item.appendChild(time);
 
-            const time = document.createElement('div');
-            time.className = 'notification-time';
-            time.textContent = timestamp;
+        // Prepend to the list (newest first)
+        listContainer.insertBefore(item, listContainer.firstChild);
 
-            item.appendChild(strong);
-            item.appendChild(time);
+        // Limit to last 20 notifications
+        while (listContainer.children.length > 20) {
+          listContainer.removeChild(listContainer.lastChild);
+        }
+      }
 
-            // Prepend to the list (newest first)
-            listContainer.insertBefore(item, listContainer.firstChild);
+      // Handle order form submission
+      function handleOrderSubmit(event) {
+        event.preventDefault();
 
-            // Limit to last 20 notifications
-            while (listContainer.children.length > 20) {
-                listContainer.removeChild(listContainer.lastChild);
-            }
+        const formMessage = document.getElementById("formMessage");
+        formMessage.className = "message";
+
+        const customerName = document
+          .getElementById("customerName")
+          .value.trim();
+        const item = document.getElementById("item").value.trim();
+        const quantity = parseInt(document.getElementById("quantity").value);
+
+        // Validate
+        if (!customerName || !item || quantity < 1) {
+          formMessage.textContent =
+            "Please fill in all fields with valid values.";
+          formMessage.classList.add("error");
+          return;
         }
 
-        // Handle order form submission
-        function handleOrderSubmit(event) {
-            event.preventDefault();
-
-            const formMessage = document.getElementById('formMessage');
-            formMessage.className = 'message';
-
-            const customerName = document.getElementById('customerName').value.trim();
-            const item = document.getElementById('item').value.trim();
-            const quantity = parseInt(document.getElementById('quantity').value);
-
-            // Validate
-            if (!customerName || !item || quantity < 1) {
-                formMessage.textContent = 'Please fill in all fields with valid values.';
-                formMessage.classList.add('error');
-                return;
+        // Submit order to orders-service
+        fetch(`${ORDERS_SERVICE_URL}/api/orders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerName: customerName,
+            item: item,
+            quantity: quantity,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
+            return response.json();
+          })
+          .then((order) => {
+            formMessage.textContent = `Order #${order.id} submitted successfully!`;
+            formMessage.classList.add("success");
 
-            // Submit order to orders-service
-            fetch(`${ORDERS_SERVICE_URL}/api/orders`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    customerName: customerName,
-                    item: item,
-                    quantity: quantity
-                })
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(order => {
-                    formMessage.textContent = `Order #${order.id} submitted successfully!`;
-                    formMessage.classList.add('success');
+            // Clear form
+            document.getElementById("orderForm").reset();
 
-                    // Clear form
-                    document.getElementById('orderForm').reset();
-
-                    // Hide message after 5 seconds
-                    setTimeout(() => {
-                        formMessage.className = 'message';
-                    }, 5000);
-                })
-                .catch(error => {
-                    console.error('Error submitting order:', error);
-                    formMessage.textContent = `Failed to submit order: ${error.message}`;
-                    formMessage.classList.add('error');
-                });
-        }
+            // Hide message after 5 seconds
+            setTimeout(() => {
+              formMessage.className = "message";
+            }, 5000);
+          })
+          .catch((error) => {
+            console.error("Error submitting order:", error);
+            formMessage.textContent = `Failed to submit order: ${error.message}`;
+            formMessage.classList.add("error");
+          });
+      }
     </script>
-</body>
+  </body>
 </html>
