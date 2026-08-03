@@ -10,10 +10,10 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class EnvController {
 
-    @Value("${ORDERS_SERVICE_URL : http://localhost:8081}")
+    @Value("${orders_service_url}")
     private String ordersServiceUrl;
 
-    @Value("${NOTIFICATIONS_WS_URL : http://localhost:8082/ws}")
+    @Value("${notifications_ws_url}")
     private String notificationsWsUrl;
 
     @GetMapping("/api/env")

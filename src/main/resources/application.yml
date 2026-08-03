@@ -4,6 +4,9 @@ spring:
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI}
+  datasource:
+    orders_service_url: ${ORDERS_SERVICE_URL}
+    notifications_ws_url: ${NOTIFICATIONS_WS_URL}
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
