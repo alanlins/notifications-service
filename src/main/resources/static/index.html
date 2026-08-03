@@ -275,22 +275,37 @@
 
     <script>
       // Configuration
-      const ORDERS_SERVICE_URL = window.ENV.ORDERS_SERVICE_URL;
+      let ORDERS_SERVICE_URL = "http:localhost:8081"; // Default value, will be overridden by fetchEnv
       // SockJS takes a plain http(s) URL and negotiates the best transport
       // (native WebSocket when available) internally — a ws:// URL throws.
-      const NOTIFICATIONS_WS_URL = window.ENV.NOTIFICATIONS_WS_URL;
+      let NOTIFICATIONS_WS_URL = "http:localhost:8082/ws"; // Default value, will be overridden by fetchEnv
 
       let stompClient = null;
 
       // Initialize on page load
       document.addEventListener("DOMContentLoaded", function () {
-        loadNotifications();
-        connectWebSocket();
+        fetchEnv();
 
         document
           .getElementById("orderForm")
           .addEventListener("submit", handleOrderSubmit);
       });
+
+      function initApp() {
+        loadNotifications();
+        connectWebSocket();
+      }
+
+      function fetchEnv() {
+        fetch("/api/env")
+          .then((response) => response.json())
+          .then((env) => {
+            ORDERS_SERVICE_URL = env.ORDERS_SERVICE_URL;
+            NOTIFICATIONS_WS_URL = env.NOTIFICATIONS_WS_URL;
+
+            initApp();
+          });
+      }
 
       // Load existing notifications
       function loadNotifications() {
