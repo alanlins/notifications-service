@@ -32,7 +32,7 @@ openssl pkcs12 -export -in service.cert -inkey service.key -out client.p12 -name
 keytool -importkeystore -deststorepass $SSL_STORE_PASSWORD -destkeystore client.keystore.jks -srckeystore client.p12 -srcstoretype PKCS12 -srcstorepass $SSL_STORE_PASSWORD -noprompt\n\
 keytool -import -file ca.pem -alias AivenCA -keystore client.truststore.jks -storepass $SSL_STORE_PASSWORD -noprompt\n\
 \n\
-exec java -DORDERS_SERVICE_URL="$APIORDERS_SERVICE_URL" -DNOTIFICATIONS_WS_URL="$APINOTIFICATIONS_WS_URL" -jar app.jar\n' > entrypoint.sh
+exec java -DORDERS_SERVICE_URL="$ORDERS_SERVICE_URL" -DNOTIFICATIONS_WS_URL="$NOTIFICATIONS_WS_URL" -jar app.jar\n' > entrypoint.sh
 
 RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
